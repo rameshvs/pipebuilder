@@ -1,0 +1,96 @@
+body {
+    font-family: verdana, sans-serif;
+    background-color: #ffffff;
+    font-size: small;
+    max-width: 800px;
+    margin-left: 0px;
+}
+h1 {
+    font-size: 2.5em;
+}
+.link {
+    stroke: #555;
+    stroke-opacity: .1;
+}
+path.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+svg {
+    margin: auto;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+}
+iframe {
+    margin: auto;
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+}
+.popup {
+    background-color: #333;
+    overflow: visible;
+    margin: auto;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+}
+.subjpickdiv {
+    margin: 10px;
+}
+
+.legend-container {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+}
+/* .legend-container { */
+/*     position: fixed; */
+/*     bottom: 0px; right: 0px; */
+/* } */
+/* .legendsvg { */
+/*     margin-left: auto; */
+/*     float: right; */
+/*     top: 0; right: 0; */
+/* } */
+circle {
+  fill: #ccc;
+  stroke: #333;
+  stroke-width: 2.5px;
+  fill-opacity: .99;
+}
+
+text {
+  font: 15px sans-serif;
+  stroke-opacity: 0.7;
+}
+
+text.foreground {
+  stroke: #111;
+  stroke-opacity: 1;
+  stroke-width: 0.75px;
+}
+text.shadow {
+  stroke: #fff;
+  stroke-opacity: .5;
+  stroke-width: 3.5px;
+}
+
+.textmenu {
+    position: absolute;
+    padding: 0px;
+    margin: 0px;
+}
+ul.textmenu {
+    background-color: #fff;
+    border: 1px #ccc solid;
+    border-radius: 3px;
+    box-shadow: #333 4px 4px 8px;
+    list-style-type: none;
+}
+
+ul.textmenu > li:hover {
+    background-color: #700;
+}
