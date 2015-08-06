@@ -8,7 +8,6 @@ import tempfile
 import mimetypes
 import base64
 import hashlib
-import string
 import collections
 
 import cherrypy
@@ -234,33 +233,6 @@ class Tracker(object):
         with open(filename, 'w') as f:
             f.write(s)
 
-    def gather_multi_subject_jsons(self, subject_list, this_subject,
-            out_location=None):
-        self.all_jsons = {}
-        assert this_subject in subject_list
-        for dataset in self.datasets:
-            try:
-                log_folder = dataset.get_log_folder(subj=this_subject)
-                this_json_list = os.path.join(log_folder, 'pb_json_list.txt')
-                read_last_line(this_json_list)
-            except Exception:
-                continue
-        #assert this_subj_json is not None
-        for subject in subject_list:
-            json_list = this_json_list.replace(this_subject, subject)
-            try:
-                subj_json = read_last_line(json_list)
-            except IOError:
-                continue
-            print(subj_json)
-            with open(subj_json) as f:
-                self.all_jsons[subject] = json.load(f)
-
-        if out_location is not None:
-            assert out_location.endswith('.json')
-            with open(out_location, 'w') as f:
-                json.dump(self.all_jsons, f)
-
     def compute_stages_bottomup(self):
         all_stages = []
         this_stage_nodes = []
@@ -437,6 +409,34 @@ class Tracker(object):
             out_stages.append(out_stage)
         return out_stages
 
+def gather_multi_subject_jsons(datasets, subject_list, out_location, iterable_key='subj'):
+    all_jsons = {}
+    a_subject = subject_list[0]
+    assert a_subject in subject_list
+    this_json_list = None
+    for dataset in datasets:
+        try:
+            log_folder = dataset.get_log_folder(**{iterable_key: a_subject})
+            this_json_list = os.path.join(log_folder, 'pb_json_list.txt')
+            read_last_line(this_json_list)
+        except ValueError:
+            continue
+    if this_json_list is None:
+        raise ValueError("Couldn't find any JSON files in " + log_folder)
+    #assert this_subj_json is not None
+    for subject in subject_list:
+        json_list = this_json_list.replace(a_subject, subject)
+        try:
+            subj_json = read_last_line(json_list)
+        except IOError:
+            continue
+        with open(subj_json) as f:
+            all_jsons[subject] = json.load(f)
+
+    assert out_location.endswith('.json')
+    with open(out_location, 'w') as f:
+        json.dump(all_jsons, f)
+
 def read_last_line(filename):
     """
     (Naively) reads the whole file in and returns the last line.
@@ -448,18 +448,32 @@ def read_last_line(filename):
 
 class SubjServer(object):
 
-    def __init__(self, dataset, subject_list, content_path, aggregate_json=None):
+    def __init__(self, dataset, subject_list, content_path, aggregate_json_file=None,
+            field_to_iterate='subj'):
+        """
+        Creates a new subject server.
+
+        Inputs
+        ------
+        dataset:
+        """
         self.dataset = dataset
         self.content_path = content_path
         self.activeJSON = None
         self.subject_list = subject_list
         self.precomputed_output_info = None
-        self.aggregate_json = aggregate_json
-        if aggregate_json is not None:
+        self.aggregate_json_file = aggregate_json_file
+        self.field_to_iterate = field_to_iterate
+        if aggregate_json_file is not None:
+            with open(aggregate_json_file) as f:
+                aggregate_json = json.load(f)
+            self.aggregate_json = aggregate_json
             self.good_subjects = sorted(aggregate_json.keys())
 
             assert set(self.good_subjects).issubset(self.subject_list)
             self.combine_output_info()
+        else:
+            self.aggregate_json = None
 
     @cherrypy.expose
     def getOutputInfo(self, index):
@@ -594,18 +608,6 @@ class SubjServer(object):
 
                 aggregate_node.append(out_val)
 
-    # @cherrypy.expose
-    # def index(self, **kwargs):
-    #     head = '<html><head><link type="text/css" rel="stylesheet" href="viz/style.css?v=<?=time();?>"><title>Subject List</title></head>'
-
-    #     body = '<body><h1>Subjects (click to see pipeline visualization)</h1><ul>'
-    #     if self.aggregate_json is not None:
-    #         body += '<li><a href="viewer?subj=aggregate">Overview</a></li>'
-    #     for subj in self.subject_list:
-    #         body += '<li><a href="viewer?subj={subj}">{subj}</a></li>'.format(subj=subj)
-    #     body += '</ul></body>'
-    #     return head + body
-
     @cherrypy.expose
     def index(self):
         self.active_subj = 'aggregate'
@@ -637,7 +639,7 @@ class SubjServer(object):
             active_subj = self.subject_list[0]
         else:
             active_subj = self.active_subj
-        json_list_file = os.path.join(self.dataset.get_log_folder(subj=active_subj),
+        json_list_file = os.path.join(self.dataset.get_log_folder(**{self.field_to_iterate: active_subj}),
                      'pb_json_list.txt')
         json_fname = read_last_line(json_list_file)
         with open(json_fname) as f:
@@ -720,7 +722,24 @@ def checkpasshash(realm, user, password):
     # right now it's just pipeline/pipeline: change this!
     return user == 'pipeline' and hashlib.sha1(password).hexdigest() == '992b5d666718483c9676361ebc685d122089e3eb'
 
-def run_server(subject_list, dataset, aggregate_json=None):
+def run_server(subject_list, dataset, aggregate_json=None,
+        field_to_iterate='subj'):
+    """
+    Runs the PipeBuilder visualization server.
+
+    Inputs
+    ------
+    subject_list: a list of subjects to show data for in the server.
+                  Note that this doesn't have to be 'subjects' necessarily;
+                  see field_to_iterate
+    dataset: a Dataset object from which the data comes
+    aggregate_json: Name of a JSON file with aggregated data across all
+                    subjects. Can be created w/gather_multi_subject_jsons(...).
+    field_to_iterate: the field that should be iterated over for display.
+                      This will usually be 'subject', so that it displays the
+                      visualization across different 'subject's, but you can
+                      specify any field from the Dataset template that you like.
+    """
 
     cwd = os.path.dirname(os.path.realpath(__file__))
     content_dir = tempfile.mkdtemp(prefix=dataset.base_dir + '/')
@@ -752,7 +771,7 @@ def run_server(subject_list, dataset, aggregate_json=None):
                 'tools.staticdir.debug': True,
             }
     }
-    cherrypy.quickstart(SubjServer(dataset, subject_list, content_dir_name, aggregate_json), config=appconfig)
+    cherrypy.quickstart(SubjServer(dataset, subject_list, content_dir_name, aggregate_json, field_to_iterate), config=appconfig)
 
     os.chdir(old_cwd)
     shutil.rmtree(content_dir)

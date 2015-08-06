@@ -1,6 +1,11 @@
-ROBEXPATH = config.get('Binaries', 'DEMONSPATH')
 
-class ROBEXCommand(Command):
+from .core import Command
+from . import util
+from .util import config
+
+ROBEXPATH = config.get('Binaries', 'ROBEXPATH')
+
+class RobexCommand(Command):
     def __init__(self, comment, **kwargs):
         """
         Command to run ROBEX (robust brain extraction tool)

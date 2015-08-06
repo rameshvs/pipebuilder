@@ -1,4 +1,5 @@
 import os
+import warnings
 
 from .core import Command
 from . import util
@@ -9,6 +10,7 @@ ANTS_EXTENSION = '.nii.gz'
 
 ANTSPATH = config.get('Binaries', 'ANTSPATH')
 ANTSPATH = config.get('Binaries', 'DEMONSPATH')
+DEMONSPATH = config.get('Binaries', 'DEMONSPATH')
 
 class DemonsCommand(Command):
     descr = "Demons registration"
@@ -244,7 +246,7 @@ class ANTSCommand(Command):
                     self.method_name = 'AFFINE'
             elif kwargs['method'] == 'nonlinear':
                 assert 'nonlinear_iterations' in kwargs
-                outfiles += ['InverseWarp' + STANDARD_EXTENSION, 'Warp' + STANDARD_EXTENSION]
+                outfiles += ['InverseWarp' + ANTS_EXTENSION, 'Warp' + ANTS_EXTENSION]
                 self.cmd += ' -i %(nonlinear_iterations)s -r %(regularization)s '
                 # Convert to a form that's appropriate for string naming:
                 # "Gauss[4.5,0] becomes "GAUSS_45_0"
