@@ -9,7 +9,6 @@ from .util import config
 ANTS_EXTENSION = '.nii.gz'
 
 ANTSPATH = config.get('Binaries', 'ANTSPATH')
-ANTSPATH = config.get('Binaries', 'DEMONSPATH')
 DEMONSPATH = config.get('Binaries', 'DEMONSPATH')
 
 class DemonsCommand(Command):

@@ -13,15 +13,24 @@ class NiiToolsMaskedThresholdCountCommand(Command):
         kwargs.setdefault('exclude', '-')
         self.cmd = PYTHON + ' ' + NIITOOLS_PATH + ' masked_threshold_count %(infile)s %(threshold)g %(output)s %(exclude)s %(label)s %(direction)s %(units)s %(labels)s'
         Command.__init__(self, comment, **kwargs)
+
 class NiiToolsMaskedThresholdCommand(Command):
     def __init__(self, comment, **kwargs):
         kwargs['labels'] = ' '.join(map(str, kwargs['labels']))
         kwargs.setdefault('exclude', '-')
         self.cmd = PYTHON + ' ' + NIITOOLS_PATH + ' masked_threshold %(infile)s %(threshold)g %(output)s %(exclude)s %(label)s %(direction)s %(labels)s'
         Command.__init__(self, comment, **kwargs)
+
 class NiiToolsMatchIntensityCommand(Command):
     def __init__(self, comment, **kwargs):
         self.cmd = PYTHON + ' ' + NIITOOLS_PATH + ' scale_intensity %(inFile)s %(maskFile)s %(intensity)s %(output)s'
+        Command.__init__(self, comment, **kwargs)
+
+class NiiToolsPadCommand(Command):
+    def __init__(self, comment, **kwargs):
+        kwargs.setdefault('padAmount',30)
+        self.cmd = PYTHON + ' ' + NIITOOLS_PATH + ' pad %(input)s %(output)s %(outmask)s %(padAmount)g'
+        self.outfiles = [kwargs['output'], kwargs['outmask']]
         Command.__init__(self, comment, **kwargs)
 
 class NiiToolsTrimCommand(Command):
