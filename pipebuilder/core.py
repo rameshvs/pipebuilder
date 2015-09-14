@@ -22,7 +22,7 @@ from . import util
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Script to generate a file for submitting with SGE QSUB
-QSUB_RUN =        os.path.join(THIS_DIR,'qsub-run')
+QSUB_RUN =        os.path.join(THIS_DIR, '..', 'scripts', 'qsub-run')
 # Requires SGE to run in batch mode
 QSUB = 'qsub'
 

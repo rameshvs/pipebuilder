@@ -6,9 +6,8 @@ import sys
 import pipebuilder as pb
 from pipebuilder import tracking
 
-from copd_analysis.tools import config
-
-affine_iterations = '10000x10000x10000x10000x10000'
+#affine_iterations = '10000x10000x10000x10000x10000'
+affine_iterations = '1x1x1'
 
 CLOBBER_EXISTING_OUTPUTS = False
 
@@ -23,6 +22,8 @@ if __name__ == '__main__':
     ########################
     subj = sys.argv[1]
 
+    run_server = (len(sys.argv) > 2 and sys.argv[2] == '--server')
+
     #############################
     ### Set up atlas and data ###
     #############################
@@ -30,7 +31,6 @@ if __name__ == '__main__':
     ## Atlas
     atlas = pb.Dataset(ATLAS_PATH, 'atlas{extension}', None)
     atlas.add_mandatory_input()
-
 
     ## Subject data
     dataset = pb.Dataset(
@@ -89,6 +89,11 @@ if __name__ == '__main__':
     tracker.compute_dependencies()
     # tracker = None
     log_folder = dataset.get_log_folder(subj=subj)
-    pb.Command.generate_code_from_datasets([dataset, atlas], log_folder, subj, sge=True,
-            wait_time=1)
+    if run_server:
+        tracking.run_server()
+
+    else:
+        pb.Command.generate_code_from_datasets([dataset, atlas], log_folder, subj, sge=True,
+                wait_time=1)
+    
 
